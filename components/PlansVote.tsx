@@ -75,6 +75,7 @@ export function PlansVote({ slug }: { slug: string }) {
           destination={state.trip.destination}
           conflicts={state.conflicts[p.id] ?? []}
           highlight={state.candidatePlanId === p.id}
+          mapHref={`/t/${slug}/plans/${p.id}/map`}
           footer={<VoteBox slug={slug} me={me} plan={p} state={state} onVoted={refresh} />}
         />
       ))}

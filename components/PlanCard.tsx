@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { ReactNode } from "react";
 import type { DayPlan } from "@/lib/plan-schema";
 import type { OpenStatus, PlanConflict, PlanLive } from "@/lib/types";
@@ -60,6 +61,7 @@ export function PlanCard({
   conflicts = [],
   highlight = false,
   footer,
+  mapHref,
 }: {
   plan: DayPlan;
   live?: PlanLive | null;
@@ -67,6 +69,7 @@ export function PlanCard({
   conflicts?: PlanConflict[];
   highlight?: boolean;
   footer?: ReactNode;
+  mapHref?: string;
 }) {
   const first = plan.stops[0];
   const last = plan.stops[plan.stops.length - 1];
@@ -81,6 +84,15 @@ export function PlanCard({
             {first?.start}–{last?.end} · ~{plan.totalHours}h · ~{travelMinutes} min travel
           </span>
           <span title={plan.costNote}>{plan.costBand}</span>
+          {live?.reorderedBy && <Chip tone="warn">Rearranged by {live.reorderedBy}</Chip>}
+          {mapHref && live?.stops.some((s) => s.location) && (
+            <Link
+              href={mapHref}
+              className="ml-auto inline-flex items-center gap-1 rounded-full bg-slate-900 px-3 py-1 font-mono text-[11px] font-semibold uppercase tracking-wider text-teal-200 shadow-[0_0_14px_rgba(45,212,191,0.35)] hover:bg-slate-800"
+            >
+              🛰 Map
+            </Link>
+          )}
         </div>
         <h3 className="text-lg font-semibold text-stone-900 dark:text-stone-50">{plan.title}</h3>
         <p className="text-stone-700 dark:text-stone-300">{plan.pitch}</p>

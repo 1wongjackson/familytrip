@@ -1,4 +1,5 @@
 import type { TRANSPORT_MODES } from "./plan-schema";
+import type { LatLng } from "./types";
 
 // Real travel times from Transitous (https://transitous.org), a free,
 // community-run journey planner over open transit data and OpenStreetMap.
@@ -11,11 +12,6 @@ const TIMEOUT_MS = 15_000;
 export const TRANSITOUS_SOURCES_URL = "https://transitous.org/sources/";
 
 type TransportMode = (typeof TRANSPORT_MODES)[number];
-
-export interface LatLng {
-  latitude: number;
-  longitude: number;
-}
 
 interface PlanResponse {
   itineraries?: { duration: number }[];

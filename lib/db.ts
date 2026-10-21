@@ -234,3 +234,10 @@ export function agree(slug: string, planId: number) {
     .prepare("UPDATE trips SET agreed_plan_id = ?, agreed_at = ? WHERE slug = ? AND agreed_plan_id IS NULL")
     .run(planId, Date.now(), slug);
 }
+
+// Saves a plan rearranged on the map.
+export function updatePlan(planId: number, data: DayPlan, live: PlanLive | null) {
+  db()
+    .prepare("UPDATE plans SET data = ?, live = ? WHERE id = ?")
+    .run(JSON.stringify(data), live ? JSON.stringify(live) : null, planId);
+}

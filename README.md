@@ -2,7 +2,7 @@
 
 **Helps a family of four settle on one day plan they all accept, without one person doing all the research.**
 
-🎬 [Watch the 1-minute intro](docs/familytrip-intro.mp4)
+🎬 [Watch the 90-second intro](docs/familytrip-intro.mp4) (16:9, narrated in Singlish, with sound)
 
 A prototype to test the riskiest bet in the product brief: **can one day plan satisfy two adults and two kids of different ages?**
 
@@ -73,7 +73,23 @@ npm run video
 npm run seed
 ```
 
-The recorder drives your installed Chrome at phone size with captions (`scripts/record-intro.ts`). The first run may ask you to install Playwright's small ffmpeg helper with `npx playwright-core install ffmpeg`. The second `seed` resets the demo trips, since the recording answers and votes in them.
+The recorder builds a 1920×1080 marketing stage, with benefit headlines beside the live app in a phone frame, and drives it in your installed Chrome (`scripts/record-intro.ts`). The narration script is in Singlish and is read by Windows' built-in speech voice (set `FAMILYTRIP_VOICE`, for example `Microsoft Zira Desktop`, to change it; Windows has no Singaporean-accent voice), and the background music is a soft pad the script synthesises itself, so there's nothing to license. The music dips automatically under the voice. The first run may ask you to install Playwright's small ffmpeg helper with `npx playwright-core install ffmpeg`. The second `seed` resets the demo trips, since the recording answers and votes in them.
+
+## Day map
+
+Each plan has a **🛰 Map** button. It opens a command-centre view of the day:
+
+- A dark, simplified map (no shops or buildings), with the hotel as **HQ**, 1/2/5 km rings around it and a scale bar, so distances are easy to judge.
+- Numbered stops joined by the route, with distance and travel time on each leg, and a strip showing stops, total distance, travel time, the day's time window and alerts.
+- **Drag ⠿ in the itinerary rail to rearrange the day.** The route updates as you drag. When you drop, the new order is saved for everyone: times are recalculated, new legs get real travel times from Transitous, and opening hours are re-checked. The plan then shows "Rearranged by …".
+
+Plans made before maps were added have no coordinates; make new plans to see them on the map. The basemap is [OpenFreeMap](https://openfreemap.org)'s free dark style (no key), rendered with Leaflet and MapLibre.
+
+To try the map beside a running app without touching its data, start a second dev server with its own build folder and database on port 3002:
+
+```bash
+scripts\dev-alt.cmd
+```
 
 ## What it does not do (yet)
 

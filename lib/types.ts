@@ -47,11 +47,28 @@ export interface StopLive {
   openStatus: OpenStatus;
   hoursText: string;
   routeMinutes: number | null; // real travel time from the previous stop (or hotel)
+  // Added for the map; missing on plans made before it.
+  location?: LatLng | null;
+  periods?: OpeningPeriod[];
+}
+
+export interface LatLng {
+  latitude: number;
+  longitude: number;
+}
+
+// Google Places opening period (0 = Sunday; zero fields may be omitted).
+export interface OpeningPeriod {
+  open: { day: number; hour?: number; minute?: number };
+  close?: { day: number; hour?: number; minute?: number };
 }
 
 export interface PlanLive {
   checkedAt: number;
   stops: StopLive[];
+  hotel?: { name: string; location: LatLng } | null;
+  utcOffsetMinutes?: number | null;
+  reorderedBy?: string; // who last rearranged the day on the map
 }
 
 export interface StoredPlan {

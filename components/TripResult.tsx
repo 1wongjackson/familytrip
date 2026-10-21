@@ -61,7 +61,7 @@ export function TripResult({ slug }: { slug: string }) {
         </p>
       </Card>
 
-      <PlanCard plan={plan.data} live={plan.live} destination={state.trip.destination} highlight />
+      <PlanCard plan={plan.data} live={plan.live} destination={state.trip.destination} highlight mapHref={`/t/${slug}/plans/${plan.id}/map`} />
     </>
   );
 }

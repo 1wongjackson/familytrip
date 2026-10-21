@@ -6,7 +6,8 @@
 
 import { agree, createTrip, db, getMembers, getPlans, saveAnswer, savePlans, saveVote, type NewTrip } from "../lib/db";
 import { DayPlanSchema, type DayPlan, type MemberFit } from "../lib/plan-schema";
-import type { Budget, OpenStatus, PlanLive, StopLive, VoteChoice } from "../lib/types";
+import { weekdayOf } from "../lib/places";
+import type { Budget, OpeningPeriod, OpenStatus, PlanLive, StopLive, VoteChoice } from "../lib/types";
 
 type Mode = DayPlan["stops"][number]["getThere"]["mode"];
 // [start, end, place, area, mode, minutes, why, trivia, food?]
@@ -93,6 +94,76 @@ interface Seed {
   rounds?: { plans: DayPlan[]; live?: PlanLive[]; votes: Record<string, (VoteChoice | [VoteChoice, string] | null)[]> }[];
   agreeOn?: number; // plan index in the last round
   minutesToAgree?: number;
+  hotelAt?: [number, number];
+  utcOffsetMinutes?: number;
+}
+
+// Map positions for every demo stop, by place name.
+const COORDS: Record<string, [number, number]> = {
+  // Lisbon
+  "Pastéis de Belém": [38.6975, -9.2032],
+  "Jerónimos Monastery": [38.6979, -9.2068],
+  "Time Out Market": [38.7069, -9.1459],
+  "Tram 28": [38.7166, -9.1306],
+  "Oceanário de Lisboa": [38.7636, -9.0937],
+  "Centro Vasco da Gama": [38.7677, -9.0975],
+  "Telecabine Lisboa": [38.7647, -9.0937],
+  "Jardim Garcia de Orta": [38.759, -9.0944],
+  "Castelo de São Jorge": [38.7139, -9.1335],
+  "Miradouro de Santa Luzia": [38.7117, -9.1301],
+  "Zé da Mouraria": [38.7154, -9.1355],
+  "LX Factory": [38.7035, -9.1783],
+  // Singapore
+  "Singapore Zoo": [1.4043, 103.793],
+  "Ah Meng Kitchen": [1.4038, 103.7925],
+  "River Wonders": [1.4036, 103.7884],
+  "Universal Studios Singapore": [1.254, 103.8238],
+  "Siloso Beach": [1.2565, 103.8114],
+  "Gardens by the Bay": [1.2816, 103.8636],
+  "Lau Pa Sat": [1.2806, 103.8504],
+  "ArtScience Museum": [1.2863, 103.8593],
+  "Maxwell Food Centre": [1.2803, 103.8448],
+  "Hotel pool break": [1.2834, 103.8607],
+  "Night Safari": [1.4022, 103.7881],
+  "Science Centre Singapore": [1.3332, 103.736],
+  "Snow City": [1.3336, 103.7366],
+  JEM: [1.3333, 103.7432],
+  "S.E.A. Aquarium": [1.2581, 103.8203],
+  "Malaysian Food Street": [1.2565, 103.821],
+  "Palawan Beach": [1.2494, 103.8226],
+  // Barcelona
+  "Sagrada Família": [41.4036, 2.1744],
+  "Hospital de Sant Pau": [41.4118, 2.1744],
+  "La Boqueria": [41.3817, 2.1716],
+  "L'Aquàrium de Barcelona": [41.3767, 2.1839],
+  "Can Solé": [41.3796, 2.1893],
+  "Barceloneta Beach": [41.3784, 2.1925],
+  "Park Güell": [41.4145, 2.1527],
+  "Telefèric de Montjuïc": [41.3716, 2.1646],
+  "Poble Espanyol": [41.369, 2.147],
+};
+
+// Opening periods for the trip's weekday from demo hours text such as
+// "Saturday: 8:00 AM – 9:00 PM", "Saturday: Open 24 hours" or "Saturday: Closed",
+// so rearranging a demo day re-checks opening hours.
+function periodsFrom(hoursText: string, weekday: number): OpeningPeriod[] | undefined {
+  if (!hoursText) return undefined;
+  if (/open 24 hours/i.test(hoursText)) return [{ open: { day: 0 } }];
+  const next = (weekday + 1) % 7;
+  if (/closed/i.test(hoursText)) return [{ open: { day: next, hour: 9 }, close: { day: next, hour: 17 } }];
+  const m = hoursText.match(/(\d{1,2}):(\d{2})\s*(AM|PM)\s*[–-]\s*(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+  if (!m) return undefined;
+  const to24 = (h: string, ap: string) => (Number(h) % 12) + (ap.toUpperCase() === "PM" ? 12 : 0);
+  const openH = to24(m[1], m[3]);
+  const closeH = to24(m[4], m[6]);
+  const closeDay = closeH * 60 + Number(m[5]) <= openH * 60 + Number(m[2]) ? next : weekday;
+  return [{ open: { day: weekday, hour: openH, minute: Number(m[2]) }, close: { day: closeDay, hour: closeH, minute: Number(m[5]) } }];
+}
+
+function located(place: string) {
+  const c = COORDS[place];
+  if (!c) throw new Error(`No map position for "${place}"`);
+  return { latitude: c[0], longitude: c[1] };
 }
 
 // ---------------------------------------------------------------------------
@@ -129,6 +200,8 @@ const kyoto: Seed = {
 
 const lisbon: Seed = {
   slug: "demo-lisbon",
+  hotelAt: [38.7107, -9.1365],
+  utcOffsetMinutes: 0,
   trip: {
     destination: "Lisbon",
     date: "2026-11-14",
@@ -369,6 +442,8 @@ const lisbon: Seed = {
 
 const singapore: Seed = {
   slug: "demo-singapore",
+  hotelAt: [1.2834, 103.8607],
+  utcOffsetMinutes: 480,
   trip: {
     destination: "Singapore",
     date: "2026-12-05",
@@ -716,6 +791,8 @@ const singapore: Seed = {
 
 const barcelona: Seed = {
   slug: "demo-barcelona",
+  hotelAt: [41.3917, 2.1649],
+  utcOffsetMinutes: 120,
   trip: {
     destination: "Barcelona",
     date: "2026-10-10",
@@ -922,9 +999,26 @@ function seed(s: Seed) {
   for (const [name, a] of Object.entries(s.answers)) saveAnswer({ memberId: id(name), ...a });
 
   s.rounds?.forEach((round, r) => {
-    // Live checks carry the matched place name, as a real Google lookup would.
-    const liveChecks = round.live?.map((l, i) => ({ ...l, stops: l.stops.map((st, j) => ({ ...st, name: round.plans[i].stops[j].place })) }));
-    savePlans(s.slug, r + 1, round.plans, liveChecks ?? null);
+    // Live checks carry the matched place name and map position, as a real
+    // lookup would. Plans without hand-written checks get positions only.
+    const liveChecks = round.plans.map((p, i): PlanLive => {
+      const base = round.live?.[i];
+      return {
+        checkedAt: Date.now(),
+        hotel: s.hotelAt ? { name: s.trip.hotelArea, location: { latitude: s.hotelAt[0], longitude: s.hotelAt[1] } } : null,
+        utcOffsetMinutes: s.utcOffsetMinutes ?? null,
+        stops: p.stops.map((stop, j) => {
+          const checked = base?.stops[j] ?? { ...live([["unknown", "", null]]).stops[0], found: false };
+          return {
+            ...checked,
+            name: stop.place,
+            location: located(stop.place),
+            periods: periodsFrom(checked.hoursText, weekdayOf(s.trip.date)),
+          };
+        }),
+      };
+    });
+    savePlans(s.slug, r + 1, round.plans, liveChecks);
     const stored = getPlans(s.slug).filter((p) => p.round === r + 1);
     for (const [name, choices] of Object.entries(round.votes)) {
       choices.forEach((c, i) => {

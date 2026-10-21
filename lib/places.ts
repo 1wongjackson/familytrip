@@ -1,6 +1,6 @@
 import type { DayPlan } from "./plan-schema";
-import { departureIso, minusMinutes, travelMinutes, type LatLng } from "./transitous";
-import type { OpenStatus, PlanLive, StopLive, Trip } from "./types";
+import { departureIso, minusMinutes, travelMinutes } from "./transitous";
+import type { LatLng, OpenStatus, OpeningPeriod as Period, PlanLive, StopLive, Trip } from "./types";
 
 // Checks each proposed stop: Google Places API (New) for the real place,
 // photo and opening hours; Transitous for real travel time between stops.
@@ -12,11 +12,6 @@ const TIMEOUT_MS = 10_000;
 
 export function liveChecksEnabled(): boolean {
   return !!process.env.GOOGLE_MAPS_API_KEY;
-}
-
-interface Period {
-  open: { day: number; hour?: number; minute?: number };
-  close?: { day: number; hour?: number; minute?: number };
 }
 
 interface Place {
@@ -197,10 +192,17 @@ export async function enrichPlans(plans: DayPlan[], trip: Trip): Promise<PlanLiv
             // weekdayDescriptions starts on Monday.
             hoursText: place.regularOpeningHours?.weekdayDescriptions?.[(weekday + 6) % 7] ?? "",
             routeMinutes: minutes[i],
+            location: place.location ?? null,
+            periods: place.regularOpeningHours?.periods ?? [],
           };
         }),
       );
-      return { checkedAt: Date.now(), stops };
+      return {
+        checkedAt: Date.now(),
+        stops,
+        hotel: hotel?.location ? { name: hotel.displayName?.text ?? trip.hotelArea, location: hotel.location } : null,
+        utcOffsetMinutes: offset ?? null,
+      };
     }),
   );
 
