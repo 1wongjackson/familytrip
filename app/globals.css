@@ -1,0 +1,60 @@
+@import "tailwindcss";
+
+@theme inline {
+  --font-sans: var(--font-geist-sans);
+}
+
+:root {
+  --scene-base: #fbf6ee;
+  --scene-glow-1: rgba(94, 196, 186, 0.38); /* lagoon */
+  --scene-glow-2: rgba(253, 186, 116, 0.42); /* sunrise */
+  --scene-glow-3: rgba(244, 114, 128, 0.16); /* dusk */
+  --scene-dots: rgba(15, 76, 80, 0.13);
+  --scene-path: rgba(15, 118, 110, 0.35);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --scene-base: #0a1220;
+    --scene-glow-1: rgba(45, 212, 191, 0.16);
+    --scene-glow-2: rgba(251, 146, 60, 0.13);
+    --scene-glow-3: rgba(244, 114, 128, 0.08);
+    --scene-dots: rgba(255, 255, 255, 0.06);
+    --scene-path: rgba(94, 234, 212, 0.25);
+  }
+}
+
+body {
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  background: var(--scene-base);
+}
+
+/* Fixed backdrop behind every page: soft glows plus a faint dotted "map". */
+.scene {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(60rem 40rem at -10% -10%, var(--scene-glow-1), transparent 60%),
+    radial-gradient(50rem 36rem at 110% 0%, var(--scene-glow-2), transparent 60%),
+    radial-gradient(48rem 40rem at 50% 115%, var(--scene-glow-3), transparent 65%),
+    var(--scene-base);
+}
+
+.scene::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(var(--scene-dots) 1.1px, transparent 1.3px);
+  background-size: 22px 22px;
+  mask-image: linear-gradient(to bottom, black, transparent 85%);
+}
+
+.scene-path {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: min(34rem, 90vw);
+  color: var(--scene-path);
+}
